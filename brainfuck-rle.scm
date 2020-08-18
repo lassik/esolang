@@ -24,7 +24,7 @@
         (let ((insn (string-ref source-code i)))
           (if (and (not (null? stride))
                    (or (not (eqv? insn (car stride)))
-                       (= 31 (length stride))))
+                       (= 32 (length stride))))
               (loop (+ i 1) (rollup stride bytes) (list insn))
               (loop (+ i 1) bytes (cons insn stride)))))))
 

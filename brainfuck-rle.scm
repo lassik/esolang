@@ -15,19 +15,16 @@
   (define (rollup stride bytes)
     (let ((opcode (insn->opcode (car stride)))
           (repeat (- (length stride) 1)))
-      (let loop ((repeat repeat) (bytes bytes))
-        (if (< repeat 0) bytes
-            (loop (- repeat 31)
-                  (bytevector-append
-                   bytes
-                   (bytevector (bitwise-ior opcode
-                                            (arithmetic-shift repeat 3)))))))))
+      (bytevector-append bytes (bytevector
+                                (bitwise-ior
+                                 opcode (arithmetic-shift repeat 3))))))
   (let loop ((i 0) (bytes (bytevector)) (stride '()))
     (if (= i (string-length source-code))
         (rollup stride bytes)
         (let ((insn (string-ref source-code i)))
           (if (and (not (null? stride))
-                   (not (eqv? insn (car stride))))
+                   (or (not (eqv? insn (car stride)))
+                       (= 31 (length stride))))
               (loop (+ i 1) (rollup stride bytes) (list insn))
               (loop (+ i 1) bytes (cons insn stride)))))))
 

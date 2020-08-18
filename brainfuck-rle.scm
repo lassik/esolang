@@ -5,9 +5,10 @@
 ;;     + - < > . , [ ]
 ;; 5 high bits: how many times to repeat (0 = once only, don't repeat)
 
+(define lookup "+-<>.,[]")
+
 (define (brainfuck->rle source-code)
   (define (insn->opcode insn)
-    (define lookup "+-<>.,[]")
     (let loop ((i 0))
       (cond ((= i (string-length lookup)) (error "Huh?"))
             ((char=? insn (string-ref lookup i)) i)
@@ -28,12 +29,32 @@
               (loop (+ i 1) (rollup stride bytes) (list insn))
               (loop (+ i 1) bytes (cons insn stride)))))))
 
+(define (read-rle-brainfuck)
+  (define (decode-byte byte)
+    (let ((opcode (bitwise-and #b111 byte))
+          (repeat (bitwise-and #b11111 (arithmetic-shift byte -3))))
+      (make-string (+ 1 repeat) (string-ref lookup opcode))))
+  (let loop ((source-code ""))
+    (let ((byte (read-u8)))
+      (if (eof-object? byte)source-code
+          (loop (string-append source-code (decode-byte byte)))))))
+
 (define (dump output-file source-code)
   (call-with-port (open-binary-output-file output-file)
                   (lambda (out)
                     (write-bytevector (brainfuck->rle source-code) out))))
 
-(dump "hello.bin"
-      (string-append
-       "++++++++[>++++[>++>+++>+++>+<<<<-]>+>->+>>+[<]<-]>>.>>---.++++++"
-       "+..+++.>.<<-.>.+++.------.--------.>+.>++."))
+(define (write-hello)
+  (dump "hello.bin"
+        (string-append
+         "++++++++[>++++[>++>+++>+++>+<<<<-]>+>->+>>+[<]<-]>>.>>---.++++++"
+         "+..+++.>.<<-.>.+++.------.--------.>+.>++.")))
+
+(define (read-hello)
+  (call-with-port (open-binary-input-file "hello.bin")
+                  (lambda (in)
+                    (parameterize ((current-input-port in))
+                      (read-rle-brainfuck)))))
+
+(display (read-hello))
+(newline)

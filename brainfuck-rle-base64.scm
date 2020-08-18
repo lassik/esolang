@@ -45,7 +45,7 @@
 (define (read-base64->brainfuck)
   (define (decode-opcode byte)
     (let ((opcode (bitwise-and #b111 byte))
-          (repeat (bitwise-and #b11111 (arithmetic-shift byte -3))))
+          (repeat (bitwise-and #b111 (arithmetic-shift byte -3))))
       (make-string (+ 1 repeat) (string-ref lookup opcode))))
   (define (base64-char->integer char)
     (or (string-index base64-alphabet char)
